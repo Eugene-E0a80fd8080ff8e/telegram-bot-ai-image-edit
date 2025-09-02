@@ -209,6 +209,8 @@ __marimo__/
 
 /test_flash_img
 /sess
+/sess_payload
 /sess2
 /*.sql.txt
 /*.db
+/incoming

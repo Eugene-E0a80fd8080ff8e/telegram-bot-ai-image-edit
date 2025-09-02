@@ -16,6 +16,9 @@ import re
 import json
 from session import Session
 import datetime
+import time
+
+from openrouter import openrouter_request_gemini_imageedit
 
 from db import Database
 db = Database()
@@ -120,6 +123,9 @@ async def handle_message(update: Update, context):
         #    context.job_queue.run_once( delay_message_processing ,delay , chat_id=chat_id, user_id=user_id, data=(message,prompt,photo_id,None))
         
         context.job_queue.run_once( delay_message_processing ,delay , chat_id=chat_id, user_id=user_id, data=(message,prompt,mentioned_photos))
+        
+    elif message.reply_to_message and message.reply_to_message.from_user.first_name == 'ai':
+        context.job_queue.run_once( delay_message_processing ,delay , chat_id=chat_id, user_id=user_id, data=(message,text,mentioned_photos))        
 
 
 async def delay_message_processing(context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -138,16 +144,29 @@ async def delay_message_processing(context: ContextTypes.DEFAULT_TYPE) -> None:
     #if media_group_id:
     #    photos_bytes.extend( db.get_photo_by_media_group_id(media_group_id) )
         
-    await process_prompt(context, prompt, photos_bytes)
+    await process_prompt(context,message, prompt, photos_bytes)
     
     
-async def process_prompt( context, prompt, photos_bytes ):
+async def process_prompt( context, message, prompt, photos_bytes ):
     sess2 = Session("sess2")
     sess2.append(sess2.makeFilename("prompt","txt"), prompt)
     for photo_bytes in photos_bytes:
         sess2.write(sess2.makeFilename("image","jpg"), photo_bytes)
         
+    res_img = openrouter_request_gemini_imageedit(prompt, photos_bytes)
     
+    imgs = [ InputMediaPhoto(media=res_img) ]
+    i=0
+    while True:
+        try:
+            await message.reply_media_group(media=imgs, do_quote = False , disable_notification =True)
+            break
+        except TimedOut:
+            print(f"Network Error. Retrying...{i}")
+            i += 1
+            time.sleep(4)
+            if i > 5:
+                break
     
     
 
