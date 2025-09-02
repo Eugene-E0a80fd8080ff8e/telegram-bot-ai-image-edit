@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: bot2.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/bot2.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}"
+        },
+        {
+            "name": "Python: bot2.py (External Terminal)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/bot2.py",
+            "console": "externalTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${command:python.interpreterPath}"
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
