@@ -119,8 +119,15 @@ class Database:
 
     def get_photo_by_id(self, photo_id):
         query = "SELECT photo_blob FROM photos WHERE photo_id = ?"
-        return self.fetch_one(query, (photo_id,))
+        res = self.fetch_one(query, (photo_id,))
+        return res[0]
 
     def get_photo_by_media_group_id(self, media_group_id):
         query = "SELECT photo_id, photo_blob FROM photos WHERE media_group_id = ?"
-        return self.fetch_all(query, (media_group_id,))
+        res = self.fetch_all(query, (media_group_id,))
+        return [x[1] for x in res]
+
+    def check_photo_by_id(self, photo_id):
+        query = "SELECT 1 FROM photos WHERE photo_id = ? LIMIT 1"
+        result = self.fetch_one(query, (photo_id,))
+        return result is not None

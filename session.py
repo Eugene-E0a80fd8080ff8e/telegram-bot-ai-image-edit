@@ -39,7 +39,7 @@ class Session:
             f.write("\n\n")
             
     def write(self,filename, binary_data):
-        with open(filename, "wb", encoding='utf-8') as f:
+        with open(filename, "wb") as f:
             f.write(binary_data)
             
             

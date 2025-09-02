@@ -45,10 +45,11 @@ async def handle_message(update: Update, context):
     
     if chat_id not in [-1002199005809, -1002211084712, -498556509, -4590114841, -1001858292142]: return
     
+    delay = 1
+    mentioned_photos = []
     
     photo_id = None
     if message.photo: photo_id = message.photo[-1].file_id
-        
     
     # https://github.com/python-telegram-bot/python-telegram-bot/wiki/Working-with-Files-and-Media
     
@@ -62,17 +63,33 @@ async def handle_message(update: Update, context):
     )
                    
     if message.photo: 
-        photo_file = await message.photo[-1].get_file()
-        photo_bytes = await photo_file.download_as_bytearray()
-        db.add_photo(photo_id=photo_id, photo_blob=photo_bytes, media_group_id=media_group_id)
-                     
+        if not db.check_photo_by_id(photo_id):
+            photo_file = await message.photo[-1].get_file()
+            photo_bytes = await photo_file.download_as_bytearray()
+            db.add_photo(photo_id=photo_id, photo_blob=photo_bytes, media_group_id=media_group_id)
+            
+        if media_group_id:
+            mentioned_photos.append( ("media_group_id", media_group_id) )
+            delay = 5
+        else: 
+            mentioned_photos.append( ("photo_id", photo_id) )
+            
+    if message.reply_to_message and message.reply_to_message.photo :
+        r_photo_id = message.reply_to_message.photo[-1].file_id
+        r_media_group_id= message.reply_to_message.media_group_id if message.reply_to_message.media_group_id else None
+        if not db.check_photo_by_id(r_photo_id):
+            photo_file = await message.reply_to_message.photo[-1].get_file()
+            photo_bytes = await photo_file.download_as_bytearray()
+            db.add_photo(photo_id=r_photo_id, photo_blob=photo_bytes, media_group_id=r_media_group_id)
+            
+        if r_media_group_id:
+            mentioned_photos.append( ("media_group_id", r_media_group_id) )
+            delay = 5
+        else: 
+            mentioned_photos.append( ("photo_id", r_photo_id) )
+
     
-
-
-
-    
-    T = datetime.datetime.now()
-    print(f"[{T}] chat_id: {chat_id}, user_id: {user_id}, username: {username}, message_id: {message.message_id}")
+    print(f"[{datetime.datetime.now()}] chat_id: {chat_id}, user_id: {user_id}, username: {username}, message_id: {message.message_id}")
     
     text = ""
     if message.text is not None : text = message.text
@@ -86,24 +103,53 @@ async def handle_message(update: Update, context):
     sess.append(sess.makeFilename("update-j","txt"), prettify_json( update.to_json()))
     #sess.append(sess.makeFilename("msg","txt"), str(message))
     sess.append(sess.makeFilename("msg-j","txt"), prettify_json( message.to_json()))
-    
-    if message.media_group_id :
-        print(f"message.media_group_id : {message.media_group_id}")
-    
+        
     if text == "ping":
-        await message.reply_text("pong")
+        await message.reply_text(f"pong / { json.dumps(mentioned_photos) }")
+        #await message.reply_text("pong")
         return
+    
+    sess.append(sess.makeFilename("mentioned_photos","txt"), str(mentioned_photos))
     
     if m := re.search( r"(?:^|\s|\n|\r|\t|$)[Aa][Ii](?:^|\s|\n|\r|\t|$)", text, re.MULTILINE):
         prompt = re.sub( r"(?:^|\s|\n|\r|\t|$)[Aa][Ii](?:^|\s|\n|\r|\t|$)" , " " , text , re.MULTILINE)
         
-        context.job_queue.run_once( delay_message_processing ,3 , chat_id=chat_id, user_id=user_id)
+        #if media_group_id :
+        #    context.job_queue.run_once( delay_message_processing ,delay , chat_id=chat_id, user_id=user_id, data=(message,prompt,None,media_group_id))
+        #else:
+        #    context.job_queue.run_once( delay_message_processing ,delay , chat_id=chat_id, user_id=user_id, data=(message,prompt,photo_id,None))
+        
+        context.job_queue.run_once( delay_message_processing ,delay , chat_id=chat_id, user_id=user_id, data=(message,prompt,mentioned_photos))
 
 
 async def delay_message_processing(context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send the alarm message."""
     job = context.job
-    await context.bot.send_message(job.chat_id, text=f"reply")
+    #await context.bot.send_message(job.chat_id, text=f"reply")
+    
+    photos_bytes = []
+    (message,prompt,mentioned_photos) = job.data
+    
+    for (t,tid) in mentioned_photos:
+        if t == "media_group_id" :  photos_bytes.extend( db.get_photo_by_media_group_id(tid) )
+        if t == "photo_id" :  photos_bytes.append( db.get_photo_by_id(tid) )
+    #if photo_id:
+    #    photos_bytes.append( db.get_photo_by_id(photo_id) )
+    #if media_group_id:
+    #    photos_bytes.extend( db.get_photo_by_media_group_id(media_group_id) )
+        
+    await process_prompt(context, prompt, photos_bytes)
+    
+    
+async def process_prompt( context, prompt, photos_bytes ):
+    sess2 = Session("sess2")
+    sess2.append(sess2.makeFilename("prompt","txt"), prompt)
+    for photo_bytes in photos_bytes:
+        sess2.write(sess2.makeFilename("image","jpg"), photo_bytes)
+        
+    
+    
+    
 
 
 ##############################

@@ -209,5 +209,6 @@ __marimo__/
 
 /test_flash_img
 /sess
+/sess2
 /*.sql.txt
 /*.db
