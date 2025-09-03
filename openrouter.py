@@ -31,7 +31,9 @@ def openrouter_request_gemini_imageedit(prompt, images, n=2):
         
     }
     
-    content = [ {  "type": "text",  "text": prompt    } ]
+    prompt2 = "output an image .\n" + prompt
+    
+    content = [ {  "type": "text",  "text": prompt2   } ]
     for im in images:
         content.append( make_dataurl(encode_bytestream_to_base64(im)) )
 
@@ -51,6 +53,8 @@ def openrouter_request_gemini_imageedit(prompt, images, n=2):
 
     sess = Session("sess_payload")
     sess.append( sess.makeFilename("payload","txt") , json.dumps( payload , indent=2 , ensure_ascii=False ))
+    for im in images:
+        sess.write( sess.makeFilename("input","jpg") , im)
 
     response = requests.post(url, headers=headers, json=payload)
     result = response.json()
@@ -68,7 +72,9 @@ def openrouter_request_gemini_imageedit(prompt, images, n=2):
             for image in message["images"]:
                 image_url = image["image_url"]["url"]  # Base64 data URL
                 print(f"Generated image: {image_url[:50]}...")
-                return data_url_image_to_bytes(image_url)
+                output_bytes = data_url_image_to_bytes(image_url)
+                sess.write( sess.makeFilename("output","jpg") , output_bytes)
+                return output_bytes
     return None
 
 
