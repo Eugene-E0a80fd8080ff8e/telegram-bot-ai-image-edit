@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: bot2.py",
+            "name": "Python: bot.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/bot2.py",
+            "program": "${workspaceFolder}/bot.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
@@ -14,10 +14,10 @@
             "python": "${command:python.interpreterPath}"
         },
         {
-            "name": "Python: bot2.py (External Terminal)",
+            "name": "Python: bot.py (External Terminal)",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/bot2.py",
+            "program": "${workspaceFolder}/bot.py",
             "console": "externalTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}",
