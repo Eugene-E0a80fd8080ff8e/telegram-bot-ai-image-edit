@@ -23,59 +23,66 @@ def make_dataurl(base64_image):
 
 
 def openrouter_request_gemini_imageedit(prompt, images, n=2):
-    url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "X-Title": "Telegram imageedit bot"
+    for attempt in range(n+1):  # total attempts: n+1
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "X-Title": "Telegram imageedit bot"
+        }
         
-    }
-    
-    prompt2 = "output an image.\n" + prompt
-    
-    content = [ {  "type": "text",  "text": prompt2   } ]
-    for im in images:
-        content.append( make_dataurl(encode_bytestream_to_base64(im)) )
-
-    payload = {
-        "model": "google/gemini-2.5-flash-image-preview",
-        "messages": [
-            {
-                "role": "user",
-                "content": content
-            }
-        ],
-        #"modalities": ["image"],
-        "modalities": ["image", "text"],
-        #"provider": { 'only': [ 'Google' ] }
-        #"provider": { 'only': [ "Google AI Studio" ] }
-    }
-
-    sess = Session("sess_payload")
-    sess.append( sess.makeFilename("payload","txt") , json.dumps( payload , indent=2 , ensure_ascii=False ))
-    for im in images:
-        sess.write( sess.makeFilename("input","jpg") , im)
-
-    response = requests.post(url, headers=headers, json=payload)
-    result = response.json()
-
-    sess.append( sess.makeFilename("reply","txt") , json.dumps( result , indent=2, ensure_ascii=False))
-    
-    if result.get("choices"):
-        message = result["choices"][0]["message"]
-        if ("images" not in message) and ("content" in message) and len( message.get("content") )>0 and n>0:
-            # google bug , retrying
-            print("retrying ... (openrouter)")
-            return openrouter_request_gemini_imageedit(prompt, images, n-1)
-            
-        if message.get("images"):
-            for image in message["images"]:
-                image_url = image["image_url"]["url"]  # Base64 data URL
-                print(f"Generated image: {image_url[:50]}...")
-                output_bytes = data_url_image_to_bytes(image_url)
-                sess.write( sess.makeFilename("output","jpg") , output_bytes)
-                return output_bytes
-    return None
+        prompt2 = "output an image.\n" + prompt
+        
+        content = [ {  "type": "text",  "text": prompt2   } ]
+        for im in images:
+            content.append( make_dataurl(encode_bytestream_to_base64(im)) )
+        
+        payload = {
+            "model": "google/gemini-2.5-flash-image-preview",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": content
+                }
+            ],
+            #"modalities": ["image"],
+            "modalities": ["image", "text"],
+            #"provider": { 'only': [ 'Google' ] }
+            #"provider": { 'only': [ "Google AI Studio" ] }
+        }
+        
+        sess = Session("sess_payload")
+        sess.append( sess.makeFilename("payload","txt") , json.dumps( payload , indent=2 , ensure_ascii=False ))
+        for im in images:
+            sess.write( sess.makeFilename("input","jpg") , im)
+        
+        response = requests.post(url, headers=headers, json=payload)
+        result = response.json()
+        
+        sess.append( sess.makeFilename("reply","txt") , json.dumps( result , indent=2, ensure_ascii=False))
+        
+        if result.get("choices"):
+            message = result["choices"][0]["message"]
+            if message.get("images"):
+                for image in message["images"]:
+                    image_url = image["image_url"]["url"]
+                    print(f"Generated image: {image_url[:50]}...")
+                    output_bytes = data_url_image_to_bytes(image_url)
+                    sess.write( sess.makeFilename("output","jpg") , output_bytes)
+                    return output_bytes
+            else:
+                # Check if should retry
+                if "content" in message and len(message.get("content")) > 0:
+                    if attempt < n:  # not the last attempt
+                        print("retrying ... (openrouter)")
+                        continue  # go to next attempt
+                    else:
+                        return None
+                else:
+                    return None
+        else:
+            return None
+    return None  # should not reach here normally
 
 
 def data_url_image_to_bytes(image_url):
