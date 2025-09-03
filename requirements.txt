@@ -1,4 +1,4 @@
 python-dotenv
-python-telegram-bot[job-queue]
+python-telegram-bot[job-queue]==22.3
 requests
-data-url
+data_url
