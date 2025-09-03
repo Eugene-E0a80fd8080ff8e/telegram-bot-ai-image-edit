@@ -1,10 +1,10 @@
 ## Telegram bot for prompt-driven image editing
 
-This telegram bot lets you create and edit image in prompt-based manner. It uses Google's AI model Gemini 2.5 Flash Image Preview. The model is decoupled properly, so to switch a provider, you just need to reimplement that single function from openrouter.py .
+This Telegram bot lets you create and edit images in prompt-based manner. It uses Google's AI model Gemini 2.5 Flash Image Preview. The model is decoupled properly, so to switch a provider, you just need to reimplement that single function from openrouter.py .
 
-You will need your own OpenRouter key to access the AI model. As of September 2025 the price is about 3-4 US cents per image.
+You will need your own OpenRouter key to access the AI model. As of September 2025 the price is about 3-4 US cents per image. Model's page at OpenRouter: [https://openrouter.ai/google/gemini-2.5-flash-image-preview](https://openrouter.ai/google/gemini-2.5-flash-image-preview).
 
-### Examples :
+### Example :
 
 Here I ask bot to create a picture, and then I ask it to modify it:
 
@@ -13,15 +13,15 @@ Here I ask bot to create a picture, and then I ask it to modify it:
 
 ## How to use
 
-It is two ways to trigger the AI bot: 
+There are two ways to trigger the AI bot: 
 - directly mentioning AI (or Ai,ai,aI) in a message
 - replying to the bot
 This allows very basic workflow: create image, modify, modify, modify...
 
-In a chat where few people are, you can quote someone else's picture and let the bot work with it by mentioning "AI" in your message.
+In a group chat where few people are, you can quote someone else's picture and let the bot work with it by mentioning "AI" in your message.
 
-You can add your own picture when quoting.
-You even can quote multi-picture post, and attach your own pictures to the message.
+You can attach additional pictures when quoting someone's picture. Bot, or other user, or your own.
+You even can quote multi-picture posts, and attach your own pictures to the message.
 
 ### Example :
 
@@ -48,10 +48,7 @@ and restart the bot.
 
 
 
-# The text below is AI-generated
-
-But still useful.
-
+# The following section is auto-generated but accurate.
 
 ## Telegram AI Image Edit Bot
 
