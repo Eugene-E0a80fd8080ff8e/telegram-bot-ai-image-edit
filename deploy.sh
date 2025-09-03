@@ -30,14 +30,16 @@ run_remote "rm -rf ${REMOTE_PROJECT_DIR}/.git"
 echo ">>> Transferring project files (including .git and ${LOCAL_ENV_FILE})..."
 tar --no-xattrs -czf - .git "${LOCAL_ENV_FILE}" | run_remote "tar -xzf - -C ${REMOTE_PROJECT_DIR}/"
 
-exit
-
 echo ">>> Setting up git repository on remote in ${REMOTE_PROJECT_DIR}..."
 run_remote "cd ${REMOTE_PROJECT_DIR} && git reset --hard && git clean -f -d"
 run_remote "cd ${REMOTE_PROJECT_DIR} && mv ${LOCAL_ENV_FILE} .env"
 
+echo ">>> Ensuring venv presence..."
+run_remote "python -m venv /home/${REMOTE_USER}/.venv"
+REMOTE_PYTHON="/home/${REMOTE_USER}/.venv/bin/python"
+
 echo ">>> Installing dependencies on remote..."
-run_remote "python -m pip install requirements.txt"
+run_remote "cd ${REMOTE_PROJECT_DIR} && ${REMOTE_PYTHON} -m pip install -r requirements.txt"
 
 echo ">>> Creating/Updating systemd service file: ${SERVICE_NAME}.service..."
 # Note: The PATH in Environment might need adjustment if nvm/node paths change on remote.
@@ -52,7 +54,7 @@ Type=simple
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 WorkingDirectory=%h/${REMOTE_PROJECT_DIR#\~/}
 ExecStartPre=/bin/sleep 5
-ExecStart=/bin/bash -c "python bot.py"
+ExecStart=/bin/bash -c "${REMOTE_PYTHON} bot.py"
 
 Restart=on-failure
 RestartSec=7
