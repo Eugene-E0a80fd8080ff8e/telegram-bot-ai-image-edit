@@ -31,7 +31,7 @@ def openrouter_request_gemini_imageedit(prompt, images, n=2):
         
     }
     
-    prompt2 = "output an image .\n" + prompt
+    prompt2 = "output an image.\n" + prompt
     
     content = [ {  "type": "text",  "text": prompt2   } ]
     for im in images:
